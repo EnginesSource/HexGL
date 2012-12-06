@@ -64,6 +64,8 @@ bkcore.hexgl.HexGL = function(opts)
 
 	this.initRenderer();
 
+	this.initSounds();
+
 	function onKeyPress(event) 
 	{
 		if(event.keyCode == 27/*escape*/) 
@@ -389,4 +391,11 @@ bkcore.hexgl.HexGL.prototype.tweakShipControls = function()
 		c.driftLerp = 0.3;
 		c.angularLerp = 0.4;
 	}
+}
+
+bkcore.hexgl.HexGL.prototype.initSounds = function()
+{
+	this.sounds = new bkcore.hexgl.Sounds({
+		hexgl: this
+	})
 }

@@ -425,6 +425,19 @@ bkcore.hexgl.ShipControls.prototype.collisionCheck = function(dt)
 		this.speed *= (1-this.collisionSpeedDecreaseCoef*(1-collision.r/255));
 		this.boost = 0;
 
+		// Play the impact sound
+		var impact = new bkcore.hexgl.Sounds.Simple({
+			sounds: hexGL.sounds,
+			sample: hexGL.track.lib.get("sounds", "ship.impact"),
+			gain: this.repulsionAmount / 5
+		})
+		var soundSource = new THREE.Vector3(-3, -0.3, 0);
+		if(this.collision.right)
+			soundSource.x *= -1;
+		this.mesh.matrix.rotateAxis(soundSource);
+		impact.setPosition(soundSource);
+		impact.start();
+
 		return true;
 	}
 	else

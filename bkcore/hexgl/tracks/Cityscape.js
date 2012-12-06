@@ -76,6 +76,12 @@ bkcore.hexgl.tracks.Cityscape = {
 					'hud.bg'							: "textures/hud/hud-bg.png",
 					'hud.speed'							: "textures/hud/hud-fg-speed.png",
 					'hud.shield'						: "textures/hud/hud-fg-shield.png"
+				},
+				sounds: {
+					'ship.impact'						: "audio/sounds/ship-impact"
+				},
+				music: {
+					'quasar-overload'							: "audio/music/quasar-overload"
 				}
 			});
 		}
@@ -130,6 +136,12 @@ bkcore.hexgl.tracks.Cityscape = {
 					'hud.bg'							: "textures/hud/hud-bg.png",
 					'hud.speed'							: "textures/hud/hud-fg-speed.png",
 					'hud.shield'						: "textures/hud/hud-fg-shield.png"
+				},
+				sounds: {
+					'ship.impact'						: "audio/sounds/ship-impact"
+				},
+				music: {
+					'quasar-overload'							: "audio/music/quasar-overload"
 				}
 			});
 		}
@@ -360,6 +372,17 @@ bkcore.hexgl.tracks.Cityscape = {
 		ctx.components.shipControls = shipControls;
 		ctx.tweakShipControls();
 
+		// SHIP SOUNDS
+		ctx.components.sounds = ctx.sounds;
+
+		var shipEngine = new bkcore.hexgl.Sounds.ShipEngine({
+			sounds: ctx.sounds,
+			shipControls: shipControls
+		});
+		shipEngine.connect();
+		ctx.components.shipEngine = shipEngine;
+		ctx.sounds.setMusic(this.lib.get("music", "quasar-overload"));
+
 		// SHIP EFFECTS AND PARTICLES
 		var fxParams = {
 			scene: scene,
@@ -376,6 +399,7 @@ bkcore.hexgl.tracks.Cityscape = {
 			fxParams.useParticles = true;
 		}
 		ctx.components.shipEffects = new bkcore.hexgl.ShipEffects(fxParams);
+
 
 		// TRACK
 		var track = ctx.createMesh(scene, this.lib.get("geometries", "track.cityscape"), 0, -5, 0, this.materials.track);
@@ -408,6 +432,10 @@ bkcore.hexgl.tracks.Cityscape = {
 			this.objects.components.shipControls.update(dt);
 			
 			this.objects.components.shipEffects.update(dt);
+
+			this.objects.components.sounds.update(dt);
+
+			this.objects.components.shipEngine.update(dt);
 
 			this.objects.components.cameraChase.update(dt, this.objects.components.shipControls.getSpeedRatio());
 			/*this.objects.time += 0.002;

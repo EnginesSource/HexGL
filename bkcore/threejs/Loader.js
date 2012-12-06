@@ -35,7 +35,8 @@ bkcore.threejs.Loader = function(opts)
 		geometries: null,
 		analysers: null,
 		images: null,
-		sounds: null
+		sounds: null,
+		music: null
 	};
 
 	this.states = {};
@@ -53,7 +54,17 @@ bkcore.threejs.Loader = function(opts)
 		loaded: 0,
 		finished: false
 	};
+
+	this.audioType = function() {
+		var audio = document.createElement("audio")
+		if (!audio.canPlayType || typeof webkitAudioContext === "undefined") return;
+		if (audio.canPlayType("audio/mpeg; codecs=\"mp3\""))
+			return ".mp3";
+		if (audio.canPlayType("audio/ogg; codecs=\"vorbis\""))
+			return ".ogg";
+	}();
 }
+
 
 /**
  * Load the given list of resources
@@ -65,6 +76,7 @@ bkcore.threejs.Loader.prototype.load = function(data)
 
 	for(var k in this.types)
 	{
+		if(!this.audioType && k === "audio" || k === "music") continue;
 		if(k in data)
 		{
 			var size = 0;
@@ -89,6 +101,15 @@ bkcore.threejs.Loader.prototype.load = function(data)
 
 	for(var i in data.images)
 		this.loadImage(i, data.images[i]);
+
+	if(this.audioType)
+	{
+		for(var i in data.sounds)
+			this.loadSound(i, data.sounds[i] + this.audioType);
+
+		for(var i in data.music)
+			this.loadMusic(i, data.music[i] + this.audioType);
+	}
 
 	this.progressCallback.call(this, this.progress);
 }
@@ -228,4 +249,36 @@ bkcore.threejs.Loader.prototype.loadImage = function(name, url)
 	e.crossOrigin = "anonymous";
 	e.src = url;
 	this.data.images[name] = e;
+}
+
+bkcore.threejs.Loader.prototype.loadSound = function(name, url)
+{
+	var self = this;
+	this.updateState("sounds", name, false);
+	var e = new XMLHttpRequest();
+	e.open('GET', url, true);
+	e.responseType = "arraybuffer";
+	e.onreadystatechange = function() {
+		if(e.readyState !== 4 || e.status !== 200) return;
+		var ctx = new webkitAudioContext();
+		ctx.decodeAudioData(e.response, function(sound) {
+			self.data.sounds[name] = sound;
+			self.updateState("sounds", name, true);
+		});
+	};
+	e.send(null);
+}
+
+bkcore.threejs.Loader.prototype.loadMusic = function(name, url)
+{
+	var self = this;
+	this.updateState("music", name, false);
+	var e = document.createElement("audio");
+	e.onload = function() {
+		self.updateState("music", name, true);
+	};
+	e.crossOrigin = "anonymous";
+	e.src = url;
+	this.data.music[name] = e;
+	e.load();
 }
