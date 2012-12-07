@@ -76,7 +76,7 @@ bkcore.threejs.Loader.prototype.load = function(data)
 
 	for(var k in this.types)
 	{
-		if(!this.audioType && k === "audio" || k === "music") continue;
+		if(!this.audioType && (k === "audio" || k === "music")) continue;
 		if(k in data)
 		{
 			var size = 0;
@@ -274,9 +274,10 @@ bkcore.threejs.Loader.prototype.loadMusic = function(name, url)
 	var self = this;
 	this.updateState("music", name, false);
 	var e = document.createElement("audio");
-	e.onload = function() {
+	e.addEventListener("canplaythrough", function cb() {
+		e.removeEventListener("canplaythrough", cb);
 		self.updateState("music", name, true);
-	};
+	}, true);
 	e.crossOrigin = "anonymous";
 	e.src = url;
 	this.data.music[name] = e;
