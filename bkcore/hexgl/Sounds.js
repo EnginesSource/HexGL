@@ -13,8 +13,13 @@ bkcore.hexgl = bkcore.hexgl || {};
 
 bkcore.hexgl.Sounds = function(opts)
 {
+	this.enabled = false;
+	try {
+		this.context = new webkitAudioContext();
+	} catch(e) {
+		return;
+	}
 	this.hexgl = opts.hexgl;
-	this.context = new webkitAudioContext();
 	this.spatialData = this.context.listener;
 	this.sfxGain = this.context.createGainNode();
 	this.sfxGain.connect(this.context.destination);
@@ -22,29 +27,32 @@ bkcore.hexgl.Sounds = function(opts)
 	this.bgmGain.connect(this.context.destination);
 	this.bgmGain.gain.setValueAtTime(0.7, 0);
 	this.music = null;
+	this.enabled = !opts.disabled;
 }
 
 bkcore.hexgl.Sounds.prototype.setPosition = function(p)
 {
-	if(!this.isSpatialized) return;
+	if(!this.spatialData) return;
 	this.spatialData.setPosition(p.x, p.y, p.z);
 }
 
 bkcore.hexgl.Sounds.prototype.setOrientation = function(o, up)
 {
-	if(!this.isSpatialized) return;
+	if(!this.spatialData) return;
 	up = up || {x: 0, y: 1, z: 0};
 	this.spatialData.setOrientation(o.x, o.y, o.z, up.x, up.y, up.z);
 }
 
 bkcore.hexgl.Sounds.prototype.setVelocity = function(v)
 {
-	if(!this.isSpatialized) return;
+	if(!this.spatialData) return;
 	this.spatialData.setVelocity(v.x, v.y, v.z);
 }
 
 bkcore.hexgl.Sounds.prototype.setMusic = function(track)
 {
+	if(!this.enabled) return;
+
 	if(this.music)
 	{
 		this.music.element.stop();
@@ -69,6 +77,8 @@ bkcore.hexgl.Sounds.prototype.setMusic = function(track)
 
 bkcore.hexgl.Sounds.prototype.update = function(dt)
 {
+	if(!this.enabled) return;
+
 	var shipControls = this.hexgl.components.shipControls
 	this.setPosition(shipControls.mesh.position);
 	this.setOrientation(shipControls.mesh.rotation, shipControls.mesh.up);
@@ -88,6 +98,8 @@ bkcore.hexgl.Sounds.Source.prototype.setVelocity = bkcore.hexgl.Sounds.prototype
 
 bkcore.hexgl.Sounds.Source.prototype.connect = function()
 {
+	if (!this.sounds.enabled) return;
+
 	var dst = this.sounds[this.type + 'Gain'];
 
 	if(this.isSpatialized)
@@ -98,6 +110,8 @@ bkcore.hexgl.Sounds.Source.prototype.connect = function()
 
 bkcore.hexgl.Sounds.Source.prototype.disconnect = function()
 {
+	if (!this.sounds.enabled) return;
+
 	var dst = this.sounds[this.type + 'Gain'];
 
 	if(this.isSpatialized)
@@ -108,6 +122,8 @@ bkcore.hexgl.Sounds.Source.prototype.disconnect = function()
 
 bkcore.hexgl.Sounds.Source.prototype.initSource = function ()
 {
+	if (!this.sounds.enabled) return;
+
 	this.gain = this.sounds.context.createGainNode();
 	this.spatialData = null;
 
@@ -123,6 +139,9 @@ bkcore.hexgl.Sounds.Source.prototype.initSource = function ()
 bkcore.hexgl.Sounds.Simple = function(opts)
 {
 	this.sounds = opts.sounds;
+
+	if (!this.sounds.enabled) return;
+
 	this.sample = opts.sample;
 	this.initSource();
 	this.initGraph();
@@ -149,6 +168,8 @@ bkcore.hexgl.Sounds.Simple.prototype.initGraph = function()
 
 bkcore.hexgl.Sounds.Simple.prototype.start = function(time)
 {
+	if(!this.sounds.enabled) return;
+
 	this.connect();
 	this.nodes.bufferSource.noteOn(this.sounds.context.currentTime + (time||0));
 }
@@ -156,6 +177,9 @@ bkcore.hexgl.Sounds.Simple.prototype.start = function(time)
 bkcore.hexgl.Sounds.ShipEngine = function(opts)
 {
 	this.sounds = opts.sounds;
+
+	if(!this.sounds.enabled) return;
+
 	this.shipControls = opts.shipControls;
 	this.initSource();
 	this.initGraph();
@@ -207,16 +231,10 @@ bkcore.hexgl.Sounds.ShipEngine.prototype.initGraph = function()
 
 bkcore.hexgl.Sounds.ShipEngine.prototype.update = function(dt)
 {
+	if(!this.sounds.enabled) return;
+
 	var thrust = 6200;
 	thrust += 800 * this.shipControls.getRealSpeedRatio();
 
 	this.nodes.oscillator.frequency.exponentialRampToValueAtTime(thrust, this.sounds.context.currentTime + dt / 1000);
-
-	var shipControls = this.shipControls;
-
-var shipmesh = new THREE.Vector3(shipControls.mesh.position.x + 1, shipControls.mesh.position.y, shipControls.mesh.position.z)
-
-	this.setPosition(shipmesh);
-	this.setOrientation(shipControls.mesh.rotation, shipControls.mesh.up);
-	this.setVelocity(shipControls.currentVelocity);
 }

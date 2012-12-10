@@ -76,7 +76,7 @@ bkcore.threejs.Loader.prototype.load = function(data)
 
 	for(var k in this.types)
 	{
-		if(!this.audioType && (k === "audio" || k === "music")) continue;
+		if(!this.audioType && (k === "sounds" || k === "music")) continue;
 		if(k in data)
 		{
 			var size = 0;
