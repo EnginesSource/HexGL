@@ -429,12 +429,13 @@ bkcore.hexgl.ShipControls.prototype.collisionCheck = function(dt)
 		var impact = new bkcore.hexgl.Sounds.Simple({
 			sounds: hexGL.sounds,
 			sample: hexGL.track.lib.get("sounds", "ship.impact"),
-			gain: this.repulsionAmount / 5
+			gain: this.repulsionAmount / 3
 		})
 		var soundSource = new THREE.Vector3(-3, -0.3, 0);
 		if(this.collision.right)
 			soundSource.x *= -1;
 		this.mesh.matrix.rotateAxis(soundSource);
+		soundSource.addSelf(this.mesh.position);
 		impact.setPosition(soundSource);
 		impact.start();
 

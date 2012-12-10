@@ -55,7 +55,7 @@ bkcore.hexgl.Sounds.prototype.setMusic = function(track)
 
 	if(this.music)
 	{
-		this.music.element.stop();
+		this.music.element.pause();
 		this.music.node.disconnect(this.bgmGain);
 	}
 
@@ -130,7 +130,7 @@ bkcore.hexgl.Sounds.Source.prototype.initSource = function ()
 	if(this.isSpatialized)
 	{
 		this.spatialData = this.sounds.context.createPanner();
-		this.spatialData.rolloffFactor = 1;
+		this.spatialData.rolloffFactor = 0.1;
 		this.gain.connect(this.spatialData);
 	}
 }
